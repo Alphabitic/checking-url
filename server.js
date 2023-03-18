@@ -4,13 +4,15 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const axios = require('axios');
 require('moment/locale/fr');
+app.use(cors());
 
 dotenv.config();
 const app = express();
+app.use(bodyParser.json());
 const port = process.env.PORT || 5000;
 // Middleware pour gérer les requêtes OPTIONS
 app.options('*', (req, res) => {
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Origin', 'https://check-url.netlify.app/');
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
     res.sendStatus(200);
@@ -103,8 +105,7 @@ const links = [
     }
 ];
 
-app.use(cors());
-app.use(bodyParser.json());
+
 
 app.get('/links', async (req, res) => {
     const linkStatuses = await Promise.all(links.map(async (link) => {
