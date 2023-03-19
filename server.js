@@ -149,7 +149,7 @@ app.get('/links', async (req, res) => {
             }
         
     }));
-    res.send(linkStatuses);
+    res.json(linkStatuses);
 });
 
 
