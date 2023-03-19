@@ -4,12 +4,14 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const axios = require('axios');
 require('moment/locale/fr');
+const app = express();
+
 app.use(cors());
 
 dotenv.config();
-const app = express();
+
 app.use(bodyParser.json());
-const port = process.env.PORT || 5000;
+const port = 5000;
 // Middleware pour gérer les requêtes OPTIONS
 app.options('*', (req, res) => {
     res.set('Access-Control-Allow-Origin', 'https://check-url.netlify.app/');
@@ -106,59 +108,51 @@ const links = [
 ];
 
 
-
 app.get('/links', async (req, res) => {
     const linkStatuses = await Promise.all(links.map(async (link) => {
         try {
-            const response = await fetch(link.link, {
-                method: 'HEAD',
-              });
-              if (response.status === 200)
-            return {
-                id: link.id,
-                link: link.link,
-                status: 'success'
-            };
-            if (response.status === 302)
+            const response = await axios.head(link.link);
+            if (response.status === 200)
             {
-                const response2 = await fetch(link.link, {
-                  method: 'HEAD',
-                  redirect: 'follow',
-                });        
-                if (response2.status === 200) {
                 return {
                     id: link.id,
                     link: link.link,
                     status: 'success'
                 };
-              } else {
-                return {
-                    id: link.id,
-                    link: link.link,
-                    status: "Une erreur est survenue lors du check",
-                };
-              }
+            }
+            if (response.status === 302)
+            {
+                const response2 = await axios.head(link.link, { maxRedirects: 0 });
+                if (response2.status === 200) {
+                    return {
+                        id: link.id,
+                        link: link.link,
+                        status: 'success'
+                    };
+                } else {
+                    return {
+                        id: link.id,
+                        link: link.link,
+                        status: "Une erreur est survenue lors du check",
+                    };
+                }
             } else {
-              return {
-                id: link.id,
-                    link: link.link,
-                    status: "Une erreur est survenue lors du check",
-              };
-            }
-
-        } catch (err) {
-          
                 return {
                     id: link.id,
                     link: link.link,
-                    status: "unreachable"
+                    status: "Une erreur est survenue lors du check",
                 };
             }
-        
+        } catch (err) {
+            return {
+                id: link.id,
+                link: link.link,
+                status: "unreachable"
+            };
+        }
     }));
     res.json(linkStatuses);
 });
-
 
 app.listen(port, () => {
     console.log(`Serveur en cours d'exécution sur le port ${port}`);
