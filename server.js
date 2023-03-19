@@ -10,11 +10,11 @@ app.use(cors());
 dotenv.config();
 
 app.use(bodyParser.json());
-const port = process.env.PORT || 5000;
+const port =5000;
 // Middleware pour gérer les requêtes OPTIONS
   //Cross Origin Handle Middleware
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', 'https://check-url.netlify.app/');
     res.header('Access-Control-Allow-Headers', 
     'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     );
