@@ -108,52 +108,48 @@ const links = [
 ];
 
 
-app.get('/links', async (req, res) => {
-    const linkStatuses = await Promise.all(links.map(async (link) => {
-        try {
-            const response = await axios.head(link.link);
-            if (response.status === 200)
-            {
-                return {
-                    id: link.id,
-                    link: link.link,
-                    status: 'success'
-                };
-            }
-            if (response.status === 302)
-            {
-                const response2 = await axios.head(link.link, { maxRedirects: 0 });
-                if (response2.status === 200) {
-                    return {
-                        id: link.id,
-                        link: link.link,
-                        status: 'success'
-                    };
-                } else {
-                    return {
-                        id: link.id,
-                        link: link.link,
-                        status: "Une erreur est survenue lors du check",
-                    };
-                }
-            } else {
-                return {
-                    id: link.id,
-                    link: link.link,
-                    status: "Une erreur est survenue lors du check",
-                };
-            }
-        } catch (err) {
-            return {
-                id: link.id,
-                link: link.link,
-                status: "unreachable"
-            };
+const checkLinkStatus = async (link) => {
+    try {
+      const response = await axios.head(link);
+      if (response.status === 200) {
+        return 'success';
+      }
+      if (response.status === 302) {
+        const response2 = await axios.head(link, { maxRedirects: 0 });
+        if (response2.status === 200) {
+          return 'success';
+        } else {
+          return "Une erreur est survenue lors du check";
         }
+      } else {
+        return "Une erreur est survenue lors du check";
+      }
+    } catch (err) {
+      return "unreachable";
+    }
+  };
+  
+  app.get('/links', async (req, res) => {
+    const linkStatuses = await Promise.all(links.map(async (link) => {
+      try {
+        const status = await checkLinkStatus(link.link);
+        return {
+          id: link.id,
+          link: link.link,
+          status: status
+        };
+      } catch (err) {
+        console.log(err);
+        return {
+          id: link.id,
+          link: link.link,
+          status: "Erreur lors de la vérification du lien"
+        };
+      }
     }));
     res.json(linkStatuses);
-});
-
-app.listen(port, () => {
+  });
+  
+  app.listen(port, () => {
     console.log(`Serveur en cours d'exécution sur le port ${port}`);
-});
+  });
