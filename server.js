@@ -5,44 +5,30 @@ const dotenv = require('dotenv');
 const axios = require('axios');
 require('moment/locale/fr');
 const app = express();
-
 app.use(cors());
 
 dotenv.config();
 
 app.use(bodyParser.json());
-const port = 5000;
+const port = process.env.PORT || 5000;
 // Middleware pour gérer les requêtes OPTIONS
-app.options('*', (req, res) => {
-    res.set('Access-Control-Allow-Origin', 'https://check-url.netlify.app/');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.sendStatus(200);
+  //Cross Origin Handle Middleware
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    );
+    if( req.method === 'OPTIONS'){
+      req.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
+      return res.status(200).json({});
+    }
+    next();
   });
 
 const links = [
+
     {
-        "link": "https://www.google.com",
-        "id": 1,
-    },
-    {
-        "link": "https://www.facebook.com",
-        "id": 2,
-    },
-    {
-        "link": "https://www.example3.com",
-        "id": 3,
-    },
-    {
-        "link": "https://webmail.buyin.pro/lm_auth_proxy?DoLMLogin?curl=L2fowa&curlid=3446992831-3598899218",
-        "id": 4,
-    },
-    {
-        "link": "https://mail.francemutuelle.fr/",
-        "id": 5,
-    },
-    {
-        "link": "https://webmail.adapei65.fr/",
+        "link": "https://webmail.adapei65.fr",
         "id": 6,
     },
     {
@@ -50,7 +36,7 @@ const links = [
         "id": 7,
     },
     {
-        "link": "https://sts.lixir.fr/",
+        "link": "https://sts.lixir.fr",
         "id": 8,
     },
     {
@@ -82,10 +68,6 @@ const links = [
         "id": 15,
     },
     {
-        "link": "https://envoludia.neocles.com",
-        "id": 16,
-    },
-    {
         "link": "https://eri.neocles.com/vpn/index_2auth.html",
         "id": 17,
     },
@@ -104,52 +86,73 @@ const links = [
     {
         "link": "https://sagess-ctx.neocles.com",
         "id": 21,
-    }
+    },
+    {
+        "link": "https://envoludia.neocles.com",
+        "id": 16,
+    },
+
+    {
+        "link": "https://mail.francemutuelle.fr/lm_auth_proxy?DoLMLogin?curl=L2fowa&curlid=1799196252-2774585649",
+        "id": 22,
+    },
 ];
 
 
-const checkLinkStatus = async (link) => {
-    try {
-      const response = await axios.head(link);
-      if (response.status === 200) {
-        return 'success';
-      }
-      if (response.status === 302) {
-        const response2 = await axios.head(link, { maxRedirects: 0 });
-        if (response2.status === 200) {
-          return 'success';
-        } else {
-          return "Une erreur est survenue lors du check";
-        }
-      } else {
-        return "Une erreur est survenue lors du check";
-      }
-    } catch (err) {
-      return "unreachable";
-    }
-  };
-  
-  app.get('/links', async (req, res) => {
+
+app.get('/links', async (req, res) => {
     const linkStatuses = await Promise.all(links.map(async (link) => {
-      try {
-        const status = await checkLinkStatus(link.link);
-        return {
-          id: link.id,
-          link: link.link,
-          status: status
-        };
-      } catch (err) {
-        console.log(err);
-        return {
-          id: link.id,
-          link: link.link,
-          status: "Erreur lors de la vérification du lien"
-        };
-      }
+        try {
+            const response = await fetch(link.link, {
+                method: 'HEAD',
+              });
+              if (response.status === 200)
+            return {
+                id: link.id,
+                link: link.link,
+                status: 'success'
+            };
+            if (response.status === 302)
+            {
+                const response2 = await fetch(link.link, {
+                  method: 'HEAD',
+                  redirect: 'follow',
+                });        
+                if (response2.status === 200) {
+                return {
+                    id: link.id,
+                    link: link.link,
+                    status: 'success'
+                };
+              } else {
+                return {
+                    id: link.id,
+                    link: link.link,
+                    status: "Une erreur est survenue lors du check",
+                };
+              }
+            } else {
+              return {
+                id: link.id,
+                    link: link.link,
+                    status: "Une erreur est survenue lors du check",
+              };
+            }
+
+        } catch (err) {
+          
+                return {
+                    id: link.id,
+                    link: link.link,
+                    status: "Cliquez sur le lien"
+                };
+            }
+        
     }));
     res.json(linkStatuses);
-  });
-  
-  app.listen(port, () => {
+});
+
+
+app.listen(port, () => {
     console.log(`Serveur en cours d'exécution sur le port ${port}`);
-  });
+});
