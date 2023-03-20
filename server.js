@@ -102,41 +102,42 @@ const links = [
         "id": 22,
     },
 ];
-    const linkStatuses = await Promise.all(links.map(async (link) => {
-        try {
-            const response = await fetch(link.link, {
-                method: 'HEAD',
-              });
-              if (response.status === 200)
-            return {
-                id: link.id,
-                link: link.link,
-                status: 'success'
-            };
-            if (response.status === 302)
-            {
-                const response2 = await fetch(link.link, {
-                  method: 'HEAD',
-                  redirect: 'follow',
-                });        
-                if (response2.status === 200) {
-                return {
-                    id: link.id,
-                    link: link.link,
-                    status: 'success'
-                };
-              } else {
-                return {
-                    id: link.id,
-                    link: link.link,
-                    status: "Une erreur est survenue lors du check",
-                };
-              }
-            } else {
-              return {
-                id: link.id,
-                    link: link.link,
-                    status: "Une erreur est survenue lors du check",
+const linkStatuses = await Promise.all(links.map(async (link) => {
+    try {
+      const response = await fetch(link.link, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        return {
+          id: link.id,
+          link: link.link,
+          status: 'success',
+        };
+      } else if (response.status === 302) {
+        const response2 = await fetch(link.link, {
+          method: 'GET',
+          redirect: 'follow',
+        });
+
+        if (response2.ok) {
+          return {
+            id: link.id,
+            link: link.link,
+            status: 'success',
+          };
+        } else {
+          return {
+            id: link.id,
+            link: link.link,
+            status: 'Une erreur est survenue lors du check',
+          };
+        }
+      } else {
+        return {
+          id: link.id,
+          link: link.link,
+            status: "Une erreur est survenue lors du check",
               };
             }
 
@@ -151,12 +152,12 @@ const links = [
         
     }));
     // Configuration de l'en-tête de réponse pour indiquer que le contenu est du JSON
-    res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type', 'application/json');
 
-    // Envoi de la réponse au format JSON
-    res.send(JSON.stringify(linkStatuses));
-  });
-  
+  // Envoi de la réponse au format JSON
+  res.send(JSON.stringify(linkStatuses));
+});
+
 
 app.listen(port, () => {
     console.log(`Serveur en cours d'exécution sur le port ${port}`);
