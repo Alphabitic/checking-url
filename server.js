@@ -150,7 +150,7 @@ const links = [
             }
         
     }));
-    res.json(linkStatuses);
+    res.send(linkStatuses);
 });
 
 
