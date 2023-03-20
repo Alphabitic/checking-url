@@ -138,8 +138,13 @@ const links = [
             }
         
     }));
-    res.send(linkStatuses);
+    // Configuration de l'en-tête de réponse pour indiquer que le contenu est du JSON
+  res.setHeader('Content-Type', 'application/json');
+
+  // Envoi de la réponse au format JSON
+  res.send(JSON.stringify(linkStatuses));
 });
+
 
 
 app.listen(port, () => {
