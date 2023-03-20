@@ -154,8 +154,8 @@ const linkStatuses = await Promise.all(links.map(async (link) => {
     // Configuration de l'en-tête de réponse pour indiquer que le contenu est du JSON
   res.setHeader('Content-Type', 'application/json');
 
-  // Envoi de la réponse au format JSON
-  res.send(JSON.stringify(linkStatuses));
+ // Retourne la liste des états de lien en tant que réponse JSON
+res.json(linkStatuses);
 });
 
 
