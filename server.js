@@ -25,6 +25,11 @@ app.use((req, res, next) => {
     next();
   });
 
+
+
+
+app.get('/links', async (req, res) => {
+    
 const links = [
 
     {
@@ -97,10 +102,6 @@ const links = [
         "id": 22,
     },
 ];
-
-
-
-app.get('/links', async (req, res) => {
     const linkStatuses = await Promise.all(links.map(async (link) => {
         try {
             const response = await fetch(link.link, {
